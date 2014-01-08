@@ -17,11 +17,9 @@ Source1:        %{name}-scheduler-%{version}%{VERSION_SUFFIX}.pom
 # Java-wise build dependencies:
 BuildRequires:  java-devel 
 BuildRequires:  jpackage-utils
-# gradle is dead.beef
-#BuildRequires:  gradle
 
 # Python-wise build dependencies
-BuildRequires:  python-devel
+BuildRequires:  python2-devel
 
 # Thrift-wise build dependencies:
 BuildRequires:  thrift >= 0.9.1
@@ -67,17 +65,18 @@ dependent processes within a single Mesos chroot.
 %setup -q -n incubator-%{name}-%{version}
 cp %{SOURCE1} ./pom.xml
 
+mkdir generated-src
 # Generates Java-specific Thrift bindings.
 # TODO - BARFS HERE!
-for thrift_file in src/main/thrift/**/*.thrift; do
+for thrift_file in $(find src/main/thrift -name *.thrift); do
   thrift --gen java:hashcode -o generated-src ${thrift_file}
 done
 
 # Generates Python-specific Thrift bindings.
 for thrift_struct in %{PYTHON_THRIFT_STRUCTS}; do
-  %{_python} src/main/python/apache/aurora/tools/java/thrift_wrapper_codegen.py \
-  src/main/thrift/org/apache/aurora/gen/api.thrift generated-src/gen-java \
-  ${thrift_struct}
+  %{__python} src/main/python/apache/aurora/tools/java/thrift_wrapper_codegen.py \
+  src/main/thrift/org/apache/aurora/gen/api.thrift ${thrift_struct} \
+  generated-src/gen-java
 done
 
 
